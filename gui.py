@@ -26,7 +26,7 @@ class UserInterface(QWidget):
         transform_button.resize(transform_button.sizeHint())
         transform_button.move(10, 40)
 
-        make_video_button = QPushButton("Make Video", self)
+        make_video_button = QPushButton("Start Video", self)
         make_video_button.clicked.connect(self.make_video)
         make_video_button.resize(make_video_button.sizeHint())
         make_video_button.move(10,70)
@@ -36,22 +36,25 @@ class UserInterface(QWidget):
         stop_video_button.resize(stop_video_button.sizeHint())
         stop_video_button.move(10,100)
 
-        self.photo_description1 = QLabel("Original", self)
+        self.photo_description1 = QLabel("Original:", self)
         self.photo_description1.move(250,10)
         self.photo_label = QLabel(self)
         self.photo_label.move(160,30)
 
-
-        self.photo_description2 = QLabel("Detected", self)
+        self.photo_description2 = QLabel("Detected:", self)
         self.photo_description2.move(520,10)
         self.photo_label2 = QLabel(self)
         self.photo_label2.move(420,30)
 
+        self.video_preview_description = QLabel("Video Preview:", self)
+        self.video_preview_description.move(340,180)
+        self.video_preview = QLabel(self)
+        self.video_preview.move(160,200)
 
         self.update_first_photo("original.jpg")
         self.update_second_photo("detected.jpg")
 
-        self.setGeometry(300, 300, 700, 200)
+        self.setGeometry(300, 300, 700, 500)
         self.setWindowTitle('Eye Pupil Detector')
         self.show()
 
@@ -59,6 +62,7 @@ class UserInterface(QWidget):
     def update_first_photo(self, filename):
         pixmap = QPixmap(filename)
         self.photo_label.setPixmap(pixmap.scaled(240,140))
+        self.video_preview.setPixmap(pixmap.scaled(480,270))
 
     def update_second_photo(self, filename):
         pixmap = QPixmap(filename)

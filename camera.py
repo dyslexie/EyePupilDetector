@@ -29,8 +29,7 @@ class Camera:
                 bytesPerLine = 3 * width
                 qImg = QImage(frame.data, width, height, bytesPerLine, QImage.Format_RGB888)
                 qImg = qImg.rgbSwapped()
-                master_thread.photo_label.setPixmap(QPixmap.fromImage(qImg).scaled(240,140))
-                #cv2.imshow('frame',frame)
+                master_thread.video_preview.setPixmap(QPixmap.fromImage(qImg).scaled(480,270))
             else:
                 break
         out.release()
