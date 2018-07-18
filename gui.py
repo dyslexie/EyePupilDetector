@@ -10,6 +10,7 @@ class UserInterface(QWidget):
 
     def __init__(self):
         super(UserInterface, self).__init__()
+        self.video_is_recording = False
         self.camera = Camera()
         self.initUI()
 
@@ -24,6 +25,16 @@ class UserInterface(QWidget):
         transform_button.clicked.connect(self.transform)
         transform_button.resize(transform_button.sizeHint())
         transform_button.move(10, 40)
+
+        make_video_button = QPushButton("Make Video", self)
+        make_video_button.clicked.connect(self.make_video)
+        make_video_button.resize(make_video_button.sizeHint())
+        make_video_button.move(10,70)
+
+        stop_video_button = QPushButton("Stop Video", self)
+        stop_video_button.clicked.connect(self.stop_video)
+        stop_video_button.resize(stop_video_button.sizeHint())
+        stop_video_button.move(10,100)
 
         self.photo_description1 = QLabel("Original", self)
         self.photo_description1.move(250,10)
@@ -56,6 +67,13 @@ class UserInterface(QWidget):
     def take_photo(self):
         self.camera.take_photo("original.jpg")
         self.update_first_photo("original.jpg")
+
+    def make_video(self):
+        self.video_is_recording = True
+        self.camera.make_video_thread("basic", self)
+
+    def stop_video(self):
+        self.video_is_recording = False
 
     def transform(self):
         new = perform_hough_transform("original.jpg")
