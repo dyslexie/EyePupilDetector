@@ -73,8 +73,9 @@ class UserInterface(QWidget):
         self.update_first_photo("original.jpg")
 
     def make_video(self):
+        filename = self.getStringFromUser("Give filename: ")
         self.video_is_recording = True
-        self.camera.make_video_thread("basic", self)
+        self.camera.make_video_thread(filename, self)
 
     def stop_video(self):
         self.video_is_recording = False
@@ -84,5 +85,9 @@ class UserInterface(QWidget):
         cv2.imwrite("detected.jpg", new)
         self.update_second_photo("detected.jpg")
 
-
+    def getStringFromUser(self, message):
+        text, ok = QInputDialog.getText(self, 'Text Input Dialog', message)
+        if ok:
+            return text
+        return ""
 
