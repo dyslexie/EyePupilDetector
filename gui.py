@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider
+from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit
 from PyQt5.QtWidgets import QPlainTextEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
@@ -38,8 +38,26 @@ class UserInterface(QWidget):
         stop_video_button.move(10,100)
 
 
+        self.hough_desc = QLabel("Hough radius range: ", self)
+        self.hough_desc.move(15,240)
+
+        self.min_rad = 7
+        self.max_rad = 11
+
+        self.set_min_button = QPushButton("Set MIN range (" + str(self.min_rad) + ")", self)
+        self.set_min_button.clicked.connect(self.min_rad_changed)
+        self.set_min_button.move(10,260)
+
+        self.set_max_button = QPushButton("Set MAX range (" + str(self.max_rad) + ")",self)
+        self.set_max_button.clicked.connect(self.max_rad_changed)
+        self.set_max_button.move(10,290)
+
+
+        #self.hough_slider.valueChanged[int].connect(self.change_fps_value)
+        #self.hough = 25
+
         self.fps_slider_desc = QLabel("FPS: " + str(25), self)
-        self.fps_slider_desc.move(30,330)
+        self.fps_slider_desc.move(70,330)
 
         self.fps_slider = QSlider(Qt.Horizontal,self)
         self.fps_slider.setMinimum(5)
@@ -47,7 +65,7 @@ class UserInterface(QWidget):
         self.fps_slider.setValue(25)
         self.fps_slider.setTickPosition(QSlider.TicksBelow)
         self.fps_slider.setTickInterval(5)
-        self.fps_slider.move(10,360)
+        self.fps_slider.move(40,360)
         self.fps_slider.valueChanged[int].connect(self.change_fps_value)
         self.fps = 25
 
@@ -62,9 +80,9 @@ class UserInterface(QWidget):
         self.photo_label2.move(420,30)
 
         self.video_preview_description = QLabel("Video Preview:", self)
-        self.video_preview_description.move(340,180)
+        self.video_preview_description.move(360,180)
         self.video_preview = QLabel(self)
-        self.video_preview.move(160,200)
+        self.video_preview.move(180,200)
 
         self.update_first_photo("original.jpg")
         self.update_second_photo("detected.jpg")
@@ -76,6 +94,18 @@ class UserInterface(QWidget):
     def change_fps_value(self, value):
         self.fps_slider_desc.setText("FPS: " + str(value))
         self.fps = value
+
+    def min_rad_changed(self, value):
+        num,ok = QInputDialog.getInt(self, 'Hough', "Give MIN value of radius: ")
+        self.min_rad = num
+        if ok:
+            self.set_min_button.setText("Set MIN range (" + str(self.min_rad) + ")")
+
+    def max_rad_changed(self, value):
+        num,ok = QInputDialog.getInt(self, 'Hough', "Give MAX value of radius: ")
+        self.max_rad = num
+        if ok:
+            self.set_max_button.setText("Set MAX range (" + str(self.max_rad) + ")")
 
     def update_first_photo(self, filename):
         pixmap = QPixmap(filename)
@@ -99,7 +129,8 @@ class UserInterface(QWidget):
         self.video_is_recording = False
 
     def transform(self):
-        new = perform_hough_transform("original.jpg")
+        new = perform_hough_transform("original.jpg", self.min_rad, self.max_rad)
+        print("Performed Hough transform with parameters: " + str(self.min_rad) + ", " + str(self.max_rad))
         cv2.imwrite("detected.jpg", new)
         self.update_second_photo("detected.jpg")
 

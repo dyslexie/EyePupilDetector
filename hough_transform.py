@@ -4,7 +4,7 @@ import numpy as np
 #create hough circles on given filename
 #returns image with hough circles marked
 
-def perform_hough_transform(filename):
+def perform_hough_transform(filename, min_rad, max_rad):
     new_image = cv2.imread(filename)
     old_image = new_image.copy()
 
@@ -31,8 +31,8 @@ def perform_hough_transform(filename):
                                      20,
                                      param1=50,
                                      param2=30,
-                                     minRadius=0,
-                                     maxRadius=0)
+                                     minRadius=min_rad,
+                                     maxRadius=max_rad)
     
     try:
         for circle in hough_circles[0,:]:
