@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider
 from PyQt5.QtWidgets import QPlainTextEdit
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 from camera import Camera
 from hough_transform import perform_hough_transform
 import logging
@@ -36,6 +37,20 @@ class UserInterface(QWidget):
         stop_video_button.resize(stop_video_button.sizeHint())
         stop_video_button.move(10,100)
 
+
+        self.fps_slider_desc = QLabel("FPS: " + str(25), self)
+        self.fps_slider_desc.move(30,330)
+
+        self.fps_slider = QSlider(Qt.Horizontal,self)
+        self.fps_slider.setMinimum(5)
+        self.fps_slider.setMaximum(60)
+        self.fps_slider.setValue(25)
+        self.fps_slider.setTickPosition(QSlider.TicksBelow)
+        self.fps_slider.setTickInterval(5)
+        self.fps_slider.move(10,360)
+        self.fps_slider.valueChanged[int].connect(self.change_fps_value)
+        self.fps = 25
+
         self.photo_description1 = QLabel("Original:", self)
         self.photo_description1.move(250,10)
         self.photo_label = QLabel(self)
@@ -58,6 +73,9 @@ class UserInterface(QWidget):
         self.setWindowTitle('Eye Pupil Detector')
         self.show()
 
+    def change_fps_value(self, value):
+        self.fps_slider_desc.setText("FPS: " + str(value))
+        self.fps = value
 
     def update_first_photo(self, filename):
         pixmap = QPixmap(filename)

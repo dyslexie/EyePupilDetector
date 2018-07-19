@@ -22,7 +22,7 @@ class Camera:
         frame_height = int(self.cam.get(4))
     
         # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
-        out = cv2.VideoWriter(filename+'.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frame_width,frame_height))
+        out = cv2.VideoWriter(filename+'.avi',cv2.VideoWriter_fourcc('M','J','P','G'), master_thread.fps, (frame_width,frame_height))
         
         while(master_thread.video_is_recording):
             ret, frame = self.cam.read()
