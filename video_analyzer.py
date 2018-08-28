@@ -24,12 +24,30 @@ class VideoAnalyzer(QWidget):
         self.video_preview = QLabel(self)
         self.video_preview.move(30,30)
 
+        self.filename_label = QLabel("Present filename: example.avi          ", self)
+        self.filename_label.move(10,310)
+
+        self.load_filename_button = QPushButton("Load File", self)
+        self.load_filename_button.clicked.connect(self.load_filename)
+        self.load_filename_button.move(10, 330)
+
+        self.filename = "example.avi"
+
+        self.load_filename_button = QPushButton("Play", self)
+        self.load_filename_button.clicked.connect(self.analyze)
+        self.load_filename_button.move(100, 330)
+
         pixmap = QPixmap("original.jpg")
         self.video_preview.setPixmap(pixmap.scaled(480,270))
 
-        self.setGeometry(300, 300, 520, 310)
+        self.setGeometry(300, 300, 520, 390)
         self.setWindowTitle('VideoAnalyzer')
         self.show()
+
+    def load_filename(self):
+        text = self.get_string_from_user("Get filename")
+        self.filename_label.setText("Present filename: " + text)
+        self.filename = text
 
     def update_preview(self, frame):
         height, width, channel = frame.shape
@@ -49,12 +67,18 @@ class VideoAnalyzer(QWidget):
                 self.update_preview(frame)
                 self.show()
 
-    def analyze(self,filename):
-         _thread.start_new_thread( self.video_update_thread, (filename, ) )
+    def analyze(self):
+        filename = self.filename
+        _thread.start_new_thread( self.video_update_thread, (filename, ) )
+
+    def get_string_from_user(self, message):
+        text, ok = QInputDialog.getText(self, 'Text Input Dialog', message)
+        if ok:
+            return text
+        return ""
 
 app = QApplication(sys.argv)
 
 analyzer = VideoAnalyzer()
-analyzer.analyze("example.avi")
 
 sys.exit(app.exec_())
