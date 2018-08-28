@@ -8,10 +8,20 @@ from PyQt5.QtGui import QPixmap, QImage
 class Camera:
     def __init__(self):
         self.cam = VideoCapture("http://192.168.43.80:8081/")
+        self.is_raspberry_connected = True
 
     def take_photo(self, filename):
         s,img = self.cam.read()
         imwrite(filename,img)
+
+    def change_camera(self):
+        if self.is_raspberry_connected:
+            self.cam = VideoCapture(0)
+            self.is_raspberry_connected = False
+            return "PC"
+        self.cam = VideoCapture("http://192.168.43.80:8081/")
+        self.is_raspberry_connected = True
+        return "Raspberry Pi"
 
     def make_video_thread(self, filename, master_thread):
          _thread.start_new_thread( self.make_video, (filename, master_thread, ) )

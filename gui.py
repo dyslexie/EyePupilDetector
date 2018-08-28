@@ -37,11 +37,16 @@ class UserInterface(QWidget):
         stop_video_button.resize(stop_video_button.sizeHint())
         stop_video_button.move(10,100)
 
-        stop_video_button = QPushButton("Switch camera \n (PC / Raspberry)", self)
-        stop_video_button.clicked.connect(self.stop_video)
-        stop_video_button.resize(stop_video_button.sizeHint())
-        stop_video_button.move(10,130)
+        switch_camera_button = QPushButton("Switch camera \n (PC / Raspberry)", self)
+        switch_camera_button.clicked.connect(self.change_camera)
+        switch_camera_button.resize(switch_camera_button.sizeHint())
+        switch_camera_button.move(10,150)
 
+        self.camera_label = QLabel("Camera : RaspberryPi ", self)
+        self.camera_label.move(10, 200)
+
+        
+        
 
         self.hough_desc = QLabel("Hough radius range: ", self)
         self.hough_desc.move(15,240)
@@ -95,6 +100,10 @@ class UserInterface(QWidget):
         self.setGeometry(300, 300, 700, 500)
         self.setWindowTitle('Eye Pupil Detector')
         self.show()
+
+    def change_camera(self):
+        source = self.camera.change_camera()
+        self.camera_label.setText("Camera : " + source)
 
     def change_fps_value(self, value):
         self.fps_slider_desc.setText("FPS: " + str(value))
