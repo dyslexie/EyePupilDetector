@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from cv2 import *
-from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit
+from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit, QTextEdit
 from PyQt5.QtWidgets import QPlainTextEdit
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtGui import QPixmap
@@ -22,6 +22,10 @@ class VideoAnalyzer(QWidget):
     def initUI(self):
         self.video_preview_description = QLabel("Video Preview:", self)
         self.video_preview_description.move(10,10)
+        
+        self.frame_number_label = QLabel("Frame number: 0      ", self)
+        self.frame_number_label.move(370, 10)
+
         self.video_preview = QLabel(self)
         self.video_preview.move(30,30)
 
@@ -42,6 +46,14 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button.clicked.connect(self.convert)
         self.load_filename_button.move(170, 330)
 
+        self.go_to_frame_button = QPushButton("Go to frame:", self)
+        self.go_to_frame_button.clicked.connect(self.go_to_frame)
+        self.go_to_frame_button.move(10, 360)
+
+        self.frame_number_input = QTextEdit("0", self)
+        self.frame_number_input.resize(50,26)
+        self.frame_number_input.move(125, 360)
+
         pixmap = QPixmap("original.jpg")
         self.video_preview.setPixmap(pixmap.scaled(480,270))
 
@@ -54,6 +66,15 @@ class VideoAnalyzer(QWidget):
 
         self.set_default_settings()
 
+    def go_to_frame(self):
+        frame = self.frame_number_input.toPlainText()
+        cap = VideoCapture(self.filename)
+        frame_number = float(frame)
+        cap.set(CAP_PROP_POS_FRAMES,frame_number)
+        flag, frame = cap.read()
+        if flag:
+            self.frame_number_label.setText("Frame number: " + "%.0f"%frame_number)
+            self.update_preview(frame)
 
     def set_default_settings(self):
         self.filename = "example.avi"
@@ -76,8 +97,6 @@ class VideoAnalyzer(QWidget):
         information += "Number of frames: " + "%.0f"%video.get(CAP_PROP_FRAME_COUNT) + "\n"
         information += "Frame per second: " + "%.0f"%video.get(CAP_PROP_FPS)
 
-
-
         self.file_information_box.clear()
         self.file_information_box.appendPlainText(information)
 
@@ -94,7 +113,7 @@ class VideoAnalyzer(QWidget):
         while(flag):
             flag, frame = cap.read()
             frame_number = cap.get(CAP_PROP_POS_FRAMES)
-            print(frame_number)
+            self.frame_number_label.setText("Frame number: " + "%.0f"%frame_number)
             if frame is not None:
                 self.update_preview(frame)
                 self.show()
