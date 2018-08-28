@@ -36,8 +36,6 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button.clicked.connect(self.load_filename)
         self.load_filename_button.move(10, 330)
 
-
-
         self.load_filename_button = QPushButton("Play", self)
         self.load_filename_button.clicked.connect(self.analyze)
         self.load_filename_button.move(100, 330)
@@ -49,6 +47,12 @@ class VideoAnalyzer(QWidget):
         self.go_to_frame_button = QPushButton("Go to frame:", self)
         self.go_to_frame_button.clicked.connect(self.go_to_frame)
         self.go_to_frame_button.move(10, 360)
+
+        self.create_label_for_output_parameters(10,390)
+
+        self.output_button = QPushButton("Generate output!", self)
+        self.output_button.clicked.connect(self.generate_output)
+        self.output_button.move(170, 470)
 
         self.frame_number_input = QTextEdit("0", self)
         self.frame_number_input.resize(50,26)
@@ -66,6 +70,42 @@ class VideoAnalyzer(QWidget):
 
         self.set_default_settings()
 
+    def generate_output(self):
+        self.start_frame = float(self.start_frame_input.toPlainText())
+        self.stop_frame = float(self.stop_frame_input.toPlainText())
+        self.min_rad = float(self.min_rad_input.toPlainText())
+        self.max_rad = float(self.max_rad_input.toPlainText())
+        
+        print(str(self.start_frame) + " " + str(self.stop_frame) + " " + str(self.min_rad) + " " + str(self.max_rad))
+
+
+    def create_label_for_output_parameters(self, width, height):
+        output_parameter_label = QLabel("Output parameters configuration:", self)
+        start_frame_label = QLabel("Start Frame:", self)
+        stop_frame_label = QLabel("Stop Frame:", self)
+        min_rad_label = QLabel("Min Rad Label:", self)
+        max_rad_label = QLabel("Max Rad Label:", self)
+        output_parameter_label.move(width, height)
+        start_frame_label.move(width, height + 30)
+        stop_frame_label.move(width, height + 60)
+        min_rad_label.move(width, height + 90)
+        max_rad_label.move(width, height + 120)
+
+        input_width = width + 100
+        self.start_frame_input = QTextEdit("0", self)
+        self.start_frame_input.resize(50,26)
+        self.stop_frame_input = QTextEdit("0", self)
+        self.stop_frame_input.resize(50,26)
+        self.min_rad_input = QTextEdit("0", self)
+        self.min_rad_input.resize(50,26)
+        self.max_rad_input = QTextEdit("0", self)
+        self.max_rad_input.resize(50,26)
+
+        self.start_frame_input.move(input_width, height + 30)
+        self.stop_frame_input.move(input_width, height + 60)
+        self.min_rad_input.move(input_width, height + 90)
+        self.max_rad_input.move(input_width, height + 120)
+
     def go_to_frame(self):
         frame = self.frame_number_input.toPlainText()
         cap = VideoCapture(self.filename)
@@ -79,7 +119,7 @@ class VideoAnalyzer(QWidget):
     def set_default_settings(self):
         self.filename = "example.avi"
         self.update_file_properties()
-        self.setGeometry(100, 100, 520, 410)
+        self.setGeometry(100, 100, 520, 540)
         self.setWindowTitle('VideoAnalyzer')
         self.show()
 
