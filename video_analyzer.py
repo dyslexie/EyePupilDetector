@@ -31,7 +31,7 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button.clicked.connect(self.load_filename)
         self.load_filename_button.move(10, 330)
 
-        self.filename = "example.avi"
+
 
         self.load_filename_button = QPushButton("Play", self)
         self.load_filename_button.clicked.connect(self.analyze)
@@ -40,7 +40,20 @@ class VideoAnalyzer(QWidget):
         pixmap = QPixmap("original.jpg")
         self.video_preview.setPixmap(pixmap.scaled(480,270))
 
-        self.setGeometry(300, 300, 520, 390)
+        self.file_information_box_label = QLabel("File information: ", self)
+        self.file_information_box_label.move(350,310)
+        self.file_information_box = QPlainTextEdit(self)
+        self.file_information_box.setReadOnly(True)
+        self.file_information_box.move(300,330)
+        self.file_information_box.resize(200,75)
+
+        self.set_default_settings()
+
+
+    def set_default_settings(self):
+        self.filename = "example.avi"
+        self.update_file_properties()
+        self.setGeometry(100, 100, 520, 410)
         self.setWindowTitle('VideoAnalyzer')
         self.show()
 
@@ -48,6 +61,20 @@ class VideoAnalyzer(QWidget):
         text = self.get_string_from_user("Get filename")
         self.filename_label.setText("Present filename: " + text)
         self.filename = text
+        self.update_file_properties()
+
+    def update_file_properties(self):
+        information = ""
+        video = VideoCapture(self.filename)
+        information += "Width: " + "%.0f"%video.get(CAP_PROP_FRAME_WIDTH) + "\n"
+        information += "Height: " + "%.0f"%video.get(CAP_PROP_FRAME_HEIGHT) + "\n"
+        information += "Number of frames: " + "%.0f"%video.get(CAP_PROP_FRAME_COUNT) + "\n"
+        information += "Frame per second: " + "%.0f"%video.get(CAP_PROP_FPS)
+
+
+
+        self.file_information_box.clear()
+        self.file_information_box.appendPlainText(information)
 
     def update_preview(self, frame):
         height, width, channel = frame.shape
