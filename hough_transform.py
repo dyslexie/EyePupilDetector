@@ -4,8 +4,11 @@ import numpy as np
 #create hough circles on given filename
 #returns image with hough circles marked
 
-def perform_hough_transform(filename, min_rad, max_rad):
+def perform_hough_transform_on_file(filename, min_rad, max_rad, file_bool):
     new_image = cv2.imread(filename)
+    return perform_hough_transform(new_image, min_rad,max_rad)
+
+def perform_hough_transform(new_image, min_rad, max_rad):
     old_image = new_image.copy()
 
     gray_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2GRAY)

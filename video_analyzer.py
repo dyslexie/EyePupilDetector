@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 import sys
 import _thread
+from hough_transform import perform_hough_transform
 
 
 
@@ -36,6 +37,10 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button = QPushButton("Play", self)
         self.load_filename_button.clicked.connect(self.analyze)
         self.load_filename_button.move(100, 330)
+
+        self.load_filename_button = QPushButton("Convert", self)
+        self.load_filename_button.clicked.connect(self.convert)
+        self.load_filename_button.move(170, 330)
 
         pixmap = QPixmap("original.jpg")
         self.video_preview.setPixmap(pixmap.scaled(480,270))
@@ -93,6 +98,22 @@ class VideoAnalyzer(QWidget):
             if frame is not None:
                 self.update_preview(frame)
                 self.show()
+
+    def video_convert_thread(self, filename):
+        cap = VideoCapture(filename)
+        flag = True
+        while(flag):
+            flag, frame = cap.read()
+            frame_number = cap.get(CAP_PROP_POS_FRAMES)
+            print(frame_number)
+            if frame is not None:
+                self.update_preview(frame)
+                perform_hough_transform(frame, 1, 2)
+                self.show()
+
+    def convert(self):
+        filename = self.filename
+        _thread.start_new_thread(self.video_convert_thread, (filename, ))
 
     def analyze(self):
         filename = self.filename

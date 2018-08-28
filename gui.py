@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QPlainTextEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 from camera import Camera
-from hough_transform import perform_hough_transform
+from hough_transform import perform_hough_transform_on_file
 import logging
 import cv2
 
@@ -36,6 +36,11 @@ class UserInterface(QWidget):
         stop_video_button.clicked.connect(self.stop_video)
         stop_video_button.resize(stop_video_button.sizeHint())
         stop_video_button.move(10,100)
+
+        stop_video_button = QPushButton("Switch camera \n (PC / Raspberry)", self)
+        stop_video_button.clicked.connect(self.stop_video)
+        stop_video_button.resize(stop_video_button.sizeHint())
+        stop_video_button.move(10,130)
 
 
         self.hough_desc = QLabel("Hough radius range: ", self)
@@ -129,7 +134,7 @@ class UserInterface(QWidget):
         self.video_is_recording = False
 
     def transform(self):
-        new = perform_hough_transform("original.jpg", self.min_rad, self.max_rad)
+        new = perform_hough_transform_on_file("original.jpg", self.min_rad, self.max_rad, True)
         print("Performed Hough transform with parameters: " + str(self.min_rad) + ", " + str(self.max_rad))
         cv2.imwrite("detected.jpg", new)
         self.update_second_photo("detected.jpg")
