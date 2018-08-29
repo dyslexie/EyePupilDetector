@@ -4,6 +4,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 from camera import Camera
 from hough_transform import perform_hough_transform_on_file
+from video_analyzer import VideoAnalyzer
 import logging
 import cv2
 
@@ -79,6 +80,10 @@ class UserInterface(QWidget):
         self.fps_slider.valueChanged[int].connect(self.change_fps_value)
         self.fps = 25
 
+        self.video_analyzer_button = QPushButton("Video Analyzer", self)
+        self.video_analyzer_button.clicked.connect(self.video_analyzer)
+        self.video_analyzer_button.move(10, 390)
+
         self.photo_description1 = QLabel("Original:", self)
         self.photo_description1.move(250,10)
         self.photo_label = QLabel(self)
@@ -97,9 +102,14 @@ class UserInterface(QWidget):
         self.update_first_photo("original.jpg")
         self.update_second_photo("detected.jpg")
 
-        self.setGeometry(300, 300, 700, 500)
+        self.setGeometry(100, 100, 700, 500)
         self.setWindowTitle('Eye Pupil Detector')
         self.show()
+
+    def video_analyzer(self):
+        self.video_analyzer = VideoAnalyzer()
+        self.video_analyzer.show()
+
 
     def change_camera(self):
         source = self.camera.change_camera()
@@ -153,4 +163,5 @@ class UserInterface(QWidget):
         if ok:
             return text
         return ""
+
 

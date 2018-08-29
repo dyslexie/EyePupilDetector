@@ -37,14 +37,9 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button.clicked.connect(self.load_filename)
         self.load_filename_button.move(10, 330)
 
-
-        self.load_filename_button = QPushButton("Play", self)
-        self.load_filename_button.clicked.connect(self.analyze)
-        self.load_filename_button.move(100, 330)
-
-        self.load_filename_button = QPushButton("Convert", self)
+        self.load_filename_button = QPushButton("Convert in preview", self)
         self.load_filename_button.clicked.connect(self.convert)
-        self.load_filename_button.move(170, 330)
+        self.load_filename_button.move(100, 330)
 
         self.go_to_frame_button = QPushButton("Go to frame:", self)
         self.go_to_frame_button.clicked.connect(self.go_to_frame_clicked)
@@ -189,7 +184,7 @@ class VideoAnalyzer(QWidget):
         self.is_stopped = False
         self.video_speed = 1.00
         self.update_file_properties()
-        self.setGeometry(100, 100, 540, 540)
+        self.setGeometry(1000, 100, 540, 540)
         self.setWindowTitle('VideoAnalyzer')
         self.show()
 
@@ -228,34 +223,38 @@ class VideoAnalyzer(QWidget):
                 self.update_preview(frame)
                 self.show()
 
-    def video_convert_thread(self, filename):
+    def video_convert_thread(self, filename, min_rad, max_rad):
         flag = True
-        while(flag):
+        while(flag and not self.is_stopped):
             flag, frame = self.video.read()
             frame_number = self.video.get(CAP_PROP_POS_FRAMES)
             print(frame_number)
             if frame is not None:
+                perform_hough_transform(frame, min_rad, max_rad)
                 self.update_preview(frame)
-                perform_hough_transform(frame, 1, 2)
                 self.show()
 
     def convert(self):
         filename = self.filename
-        _thread.start_new_thread(self.video_convert_thread, (filename, ))
+        min_rad = self.get_string_from_user("Min rad: ", 0)
+        max_rad = self.get_string_from_user("Max rad: ", 0)
+        self.is_stopped = False
+
+        _thread.start_new_thread(self.video_convert_thread, (filename, min_rad, max_rad, ))
 
     def analyze(self):
         filename = self.filename
         self.is_stopped = False
         _thread.start_new_thread( self.video_update_thread, (filename, ) )
 
-    def get_string_from_user(self, message):
+    def get_string_from_user(self, message, default = ""):
         text, ok = QInputDialog.getText(self, 'Text Input Dialog', message)
         if ok:
             return text
-        return ""
+        return default
 
-app = QApplication(sys.argv)
+# app = QApplication(sys.argv)
 
-analyzer = VideoAnalyzer()
+# analyzer = VideoAnalyzer()
 
-sys.exit(app.exec_())
+# sys.exit(app.exec_())
