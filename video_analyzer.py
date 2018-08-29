@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 import sys
 import _thread
+from time import sleep
 from hough_transform import perform_hough_transform
 
 
@@ -36,6 +37,7 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button.clicked.connect(self.load_filename)
         self.load_filename_button.move(10, 330)
 
+
         self.load_filename_button = QPushButton("Play", self)
         self.load_filename_button.clicked.connect(self.analyze)
         self.load_filename_button.move(100, 330)
@@ -45,14 +47,16 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button.move(170, 330)
 
         self.go_to_frame_button = QPushButton("Go to frame:", self)
-        self.go_to_frame_button.clicked.connect(self.go_to_frame)
+        self.go_to_frame_button.clicked.connect(self.go_to_frame_clicked)
         self.go_to_frame_button.move(10, 360)
 
         self.create_label_for_output_parameters(10,390)
 
         self.output_button = QPushButton("Generate output!", self)
         self.output_button.clicked.connect(self.generate_output)
-        self.output_button.move(170, 470)
+        self.output_button.move(170, 440)
+
+        self.create_control_buttons(170, 470)
 
         self.frame_number_input = QTextEdit("0", self)
         self.frame_number_input.resize(50,26)
@@ -69,6 +73,42 @@ class VideoAnalyzer(QWidget):
         self.file_information_box.resize(200,75)
 
         self.set_default_settings()
+
+
+    def create_control_buttons(self, width, height):
+        self.play = QPushButton("Play", self)
+        self.play.clicked.connect(self.analyze)
+        self.stop = QPushButton("Stop", self)
+        self.stop.clicked.connect(self.stop_video)
+        self.faster = QPushButton("Faster", self)
+        self.faster.clicked.connect(self.increase_speed_of_video)
+        self.slower = QPushButton("Slower", self)
+        self.slower.clicked.connect(self.decrease_speed_of_video)
+        self.reset = QPushButton("Reset", self)
+        self.reset.clicked.connect(self.reset_video)
+
+        self.speed_label = QLabel("Speed = x 1.00  ", self)
+        self.speed_label.move(width + 10, height + 40)
+
+        self.slower.move(width, height)
+        self.stop.move(width + 80, height)
+        self.play.move(width + 150, height)
+        self.reset.move(width + 210, height)
+        self.faster.move(width + 280, height)
+
+    def stop_video(self):
+        self.is_stopped = True
+
+    def increase_speed_of_video(self):
+        self.video_speed = self.video_speed + 0.1
+        self.speed_label.setText("Speed = x "+"%.2f"%self.video_speed)
+
+    def decrease_speed_of_video(self):
+        self.video_speed = self.video_speed - 0.1
+        self.speed_label.setText("Speed = x "+"%.2f"%self.video_speed)
+    
+    def reset_video(self):
+        self.go_to_frame(0)
 
     def generate_output(self):
         self.start_frame = float(self.start_frame_input.toPlainText())
@@ -106,20 +146,24 @@ class VideoAnalyzer(QWidget):
         self.min_rad_input.move(input_width, height + 90)
         self.max_rad_input.move(input_width, height + 120)
 
-    def go_to_frame(self):
+    def go_to_frame_clicked(self):
         frame = self.frame_number_input.toPlainText()
-        cap = VideoCapture(self.filename)
+        self.go_to_frame(frame)
+
+    def go_to_frame(self, frame):
         frame_number = float(frame)
-        cap.set(CAP_PROP_POS_FRAMES,frame_number)
-        flag, frame = cap.read()
+        self.video.set(CAP_PROP_POS_FRAMES,frame_number)
+        flag, frame = self.video.read()
         if flag:
             self.frame_number_label.setText("Frame number: " + "%.0f"%frame_number)
             self.update_preview(frame)
 
     def set_default_settings(self):
         self.filename = "example.avi"
+        self.is_stopped = False
+        self.video_speed = 1.00
         self.update_file_properties()
-        self.setGeometry(100, 100, 520, 540)
+        self.setGeometry(100, 100, 540, 540)
         self.setWindowTitle('VideoAnalyzer')
         self.show()
 
@@ -131,11 +175,11 @@ class VideoAnalyzer(QWidget):
 
     def update_file_properties(self):
         information = ""
-        video = VideoCapture(self.filename)
-        information += "Width: " + "%.0f"%video.get(CAP_PROP_FRAME_WIDTH) + "\n"
-        information += "Height: " + "%.0f"%video.get(CAP_PROP_FRAME_HEIGHT) + "\n"
-        information += "Number of frames: " + "%.0f"%video.get(CAP_PROP_FRAME_COUNT) + "\n"
-        information += "Frame per second: " + "%.0f"%video.get(CAP_PROP_FPS)
+        self.video = VideoCapture(self.filename)
+        information += "Width: " + "%.0f"%self.video.get(CAP_PROP_FRAME_WIDTH) + "\n"
+        information += "Height: " + "%.0f"%self.video.get(CAP_PROP_FRAME_HEIGHT) + "\n"
+        information += "Number of frames: " + "%.0f"%self.video.get(CAP_PROP_FRAME_COUNT) + "\n"
+        information += "Frame per second: " + "%.0f"%self.video.get(CAP_PROP_FPS)
 
         self.file_information_box.clear()
         self.file_information_box.appendPlainText(information)
@@ -148,22 +192,21 @@ class VideoAnalyzer(QWidget):
         self.video_preview.setPixmap(QPixmap.fromImage(qImg).scaled(480,270))
 
     def video_update_thread(self,filename):
-        cap = VideoCapture(filename)
         flag = True
-        while(flag):
-            flag, frame = cap.read()
-            frame_number = cap.get(CAP_PROP_POS_FRAMES)
+        while(flag and not self.is_stopped):
+            flag, frame = self.video.read()
+            frame_number = self.video.get(CAP_PROP_POS_FRAMES)
             self.frame_number_label.setText("Frame number: " + "%.0f"%frame_number)
             if frame is not None:
+                sleep(0.3/(self.video.get(CAP_PROP_FPS)*self.video_speed))
                 self.update_preview(frame)
                 self.show()
 
     def video_convert_thread(self, filename):
-        cap = VideoCapture(filename)
         flag = True
         while(flag):
-            flag, frame = cap.read()
-            frame_number = cap.get(CAP_PROP_POS_FRAMES)
+            flag, frame = self.video.read()
+            frame_number = self.video.get(CAP_PROP_POS_FRAMES)
             print(frame_number)
             if frame is not None:
                 self.update_preview(frame)
@@ -176,6 +219,7 @@ class VideoAnalyzer(QWidget):
 
     def analyze(self):
         filename = self.filename
+        self.is_stopped = False
         _thread.start_new_thread( self.video_update_thread, (filename, ) )
 
     def get_string_from_user(self, message):
