@@ -10,8 +10,8 @@ from PyQt5.QtWidgets import QApplication
 import sys
 import _thread
 from time import sleep
-from hough_transform import perform_hough_transform
-
+from hough_transform import perform_hough_transform, perform_hough_transforms_and_return_circles
+import csv
 
 
 class VideoAnalyzer(QWidget):
@@ -111,13 +111,39 @@ class VideoAnalyzer(QWidget):
         self.go_to_frame(0)
 
     def generate_output(self):
-        self.start_frame = float(self.start_frame_input.toPlainText())
-        self.stop_frame = float(self.stop_frame_input.toPlainText())
-        self.min_rad = float(self.min_rad_input.toPlainText())
-        self.max_rad = float(self.max_rad_input.toPlainText())
-        
-        print(str(self.start_frame) + " " + str(self.stop_frame) + " " + str(self.min_rad) + " " + str(self.max_rad))
+        filename = self.get_string_from_user("Output filename: ")
 
+        self.start_frame = int(self.start_frame_input.toPlainText())
+        self.stop_frame = int(self.stop_frame_input.toPlainText())
+        self.min_rad = int(self.min_rad_input.toPlainText())
+        self.max_rad = int(self.max_rad_input.toPlainText())
+
+        video_analyzer = VideoCapture(self.filename)
+        video_analyzer.set(CAP_PROP_POS_FRAMES, self.start_frame)
+        difference = int(self.stop_frame - self.start_frame)
+        list_of_circles = []
+        current_frame = self.stop_frame
+
+        for x in range(difference):
+            flag, frame = video_analyzer.read()
+            circles = perform_hough_transforms_and_return_circles(frame, self.min_rad, self.max_rad)
+            list_of_circles.append((current_frame, circles))
+            current_frame = current_frame + 1
+        
+        self.save_list_to_file(filename, list_of_circles)
+        print(list_of_circles)
+
+
+
+    def save_list_to_file(self, filename, list_of_circles):
+        with open(filename, 'w') as csvfile:
+            for circle in list_of_circles:
+                csvfile.write(str(circle[0]))
+                csvfile.write(",")
+                for x in range(3):
+                    csvfile.write(str(circle[1][0][0][x]))
+                    csvfile.write(",")
+                csvfile.write("\n")
 
     def create_label_for_output_parameters(self, width, height):
         output_parameter_label = QLabel("Output parameters configuration:", self)
