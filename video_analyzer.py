@@ -68,9 +68,9 @@ class VideoAnalyzer(QWidget):
         self.load_filename_button.clicked.connect(self.load_filename)
         self.load_filename_button.move(width, height + 20)
 
-        self.load_filename_button = QPushButton("Convert in preview", self)
-        self.load_filename_button.clicked.connect(self.convert)
-        self.load_filename_button.move(width + 90, height + 20)
+        self.convert_button = QPushButton("Convert in preview", self)
+        self.convert_button.clicked.connect(self.convert)
+        self.convert_button.move(width + 90, height + 20)
 
         self.go_to_frame_button = QPushButton("Go to frame:", self)
         self.go_to_frame_button.clicked.connect(self.go_to_frame_clicked)
