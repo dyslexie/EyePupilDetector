@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from camera import Camera
 from hough_transform import perform_hough_transform_on_file
 from video_analyzer import VideoAnalyzer
+from time import sleep
 import logging
 import cv2
 
@@ -99,9 +100,13 @@ class UserInterface(QWidget):
         self.video_preview = QLabel(self)
         self.video_preview.move(180,200)
 
+        self.rec_indicator = QLabel(self)
+        self.rec_indicator.resize(25,45)
+
         self.update_first_photo("original.jpg")
         self.update_second_photo("detected.jpg")
 
+        self.camera.generate_preview_thread(self)
         self.setGeometry(100, 100, 700, 500)
         self.setWindowTitle('Eye Pupil Detector')
         self.show()
@@ -110,10 +115,13 @@ class UserInterface(QWidget):
         self.video_analyzer = VideoAnalyzer()
         self.video_analyzer.show()
 
-
     def change_camera(self):
         source = self.camera.change_camera()
         self.camera_label.setText("Camera : " + source)
+        self.video_is_recording = True
+        sleep(1)
+        self.video_is_recording = False
+        self.camera.generate_preview_thread(self)
 
     def change_fps_value(self, value):
         self.fps_slider_desc.setText("FPS: " + str(value))
@@ -147,10 +155,15 @@ class UserInterface(QWidget):
     def make_video(self):
         filename = self.getStringFromUser("Give filename: ")
         self.video_is_recording = True
+        rec_button_pixmap = QPixmap("rec_button_red.png")
+        self.rec_indicator.setPixmap(rec_button_pixmap.scaled(25,45))
+        self.rec_indicator.move(120,75)
         self.camera.make_video_thread(filename, self)
 
     def stop_video(self):
         self.video_is_recording = False
+        self.camera.generate_preview_thread(self)
+        self.rec_indicator.clear()
 
     def transform(self):
         new = perform_hough_transform_on_file("original.jpg", self.min_rad, self.max_rad, True)
