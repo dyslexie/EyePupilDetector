@@ -44,11 +44,8 @@ class UserInterface(QWidget):
         switch_camera_button.resize(switch_camera_button.sizeHint())
         switch_camera_button.move(10,150)
 
-        self.camera_label = QLabel("Camera : RaspberryPi ", self)
+        self.camera_label = QLabel("Camera : PC                       ", self)
         self.camera_label.move(10, 200)
-
-        
-        
 
         self.hough_desc = QLabel("Hough radius range: ", self)
         self.hough_desc.move(15,240)
