@@ -26,6 +26,25 @@ class Camera:
     def make_video_thread(self, filename, master_thread):
          _thread.start_new_thread( self.make_video, (filename, master_thread, ) )
 
+    def generate_preview_thread(self, master_thread):
+        _thread.start_new_thread(self.make_preview, (master_thread, ))
+
+    def make_preview(self, master_thread):
+        # Define the codec and create VideoWriter object
+        frame_width = int(self.cam.get(3))
+        frame_height = int(self.cam.get(4))
+    
+        while(not master_thread.video_is_recording):
+            ret, frame = self.cam.read()
+            if ret==True:
+                height, width, channel = frame.shape
+                bytesPerLine = 3 * width
+                qImg = QImage(frame.data, width, height, bytesPerLine, QImage.Format_RGB888)
+                qImg = qImg.rgbSwapped()
+                master_thread.video_preview.setPixmap(QPixmap.fromImage(qImg).scaled(480,270))
+            else:
+                break
+
     def make_video(self, filename, master_thread):
         # Define the codec and create VideoWriter object
         frame_width = int(self.cam.get(3))
@@ -46,4 +65,3 @@ class Camera:
             else:
                 break
         out.release()
-        cv2.destroyAllWindows()
