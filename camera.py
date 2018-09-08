@@ -7,8 +7,8 @@ from PyQt5.QtGui import QPixmap, QImage
 
 class Camera:
     def __init__(self):
-        self.cam = VideoCapture("http://192.168.43.80:8081/")
-        self.is_raspberry_connected = True
+        self.cam = VideoCapture(0)
+        self.is_raspberry_connected = False
 
     def take_photo(self, filename):
         s,img = self.cam.read()
