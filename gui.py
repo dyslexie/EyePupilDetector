@@ -1,11 +1,12 @@
 from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit
-from PyQt5.QtWidgets import QPlainTextEdit
+from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 from camera import Camera
 from hough_transform import perform_hough_transform_on_file
 from video_analyzer import VideoAnalyzer
 from time import sleep
+import socket
 import logging
 import cv2
 
@@ -95,7 +96,7 @@ class UserInterface(QWidget):
         self.video_preview_description = QLabel("Video Preview:", self)
         self.video_preview_description.move(360,180)
         self.video_preview = QLabel(self)
-        self.video_preview.move(180,200)
+        self.video_preview.move(200,200)
 
         self.rec_indicator = QLabel(self)
         self.rec_indicator.resize(25,45)
@@ -103,14 +104,53 @@ class UserInterface(QWidget):
         self.update_first_photo("original.jpg")
         self.update_second_photo("detected.jpg")
 
+        self.create_diode_controls(0, 420)
+
         self.camera.generate_preview_thread(self)
-        self.setGeometry(100, 100, 700, 500)
+        self.setGeometry(100, 100, 700, 520)
         self.setWindowTitle('Eye Pupil Detector')
         self.show()
 
     def video_analyzer(self):
         self.video_analyzer = VideoAnalyzer()
         self.video_analyzer.show()
+
+    def update_configuration(self):
+        
+        freq = int(self.freq_input.toPlainText())
+        intensity = int(self.intensity_input.toPlainText())
+        print("Parameters: ", freq, intensity)
+        try:
+            client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            client.connect(('localhost',2222))
+            client.send(("UPDATE_CONF: " + str(freq) + " " +str(intensity)).encode())
+            client.close()
+            print("Sent update of configuration!")
+        except Exception as e:
+            print("Configuration not sent!")
+            print("catched exception:")
+            print(e)
+        
+        
+    def create_diode_controls(self, width, height):
+        self.send_configuration_to_raspberry = QPushButton("Update \n Raspberry Configuration", self)
+        self.send_configuration_to_raspberry.clicked.connect(self.update_configuration)
+        self.send_configuration_to_raspberry.move(width, height)
+
+        self.freq_label = QLabel("Frequency [%]: ", self)
+        self.freq_label.move(width + 10, height + 45)
+
+        self.intensity_label = QLabel("Intensity [%]: ", self)
+        self.intensity_label.move(width + 10, height + 65)
+
+        self.freq_input = QTextEdit("0", self)
+        self.freq_input.resize(50,26)
+        self.freq_input.move(width + 110, height + 40)
+
+        self.intensity_input = QTextEdit("0", self)
+        self.intensity_input.resize(50,26)
+        self.intensity_input.move(width + 110, height + 66)
+
 
     def change_camera(self):
         source = self.camera.change_camera()

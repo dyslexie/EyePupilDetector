@@ -85,9 +85,3 @@ while True:
 #     client.close()
 #     sleep(1)
 
-
-#sleep(2)
-
-
-
-#sleep(1)
