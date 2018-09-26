@@ -3,6 +3,8 @@ sys.path.append("../")
 import socket
 import _thread
 from time import sleep
+import RPi.GPIO as GPIO
+
 
 import signal
 import sys
@@ -15,8 +17,11 @@ class DiodeManager:
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.server_socket.bind((TCP_IP,TCP_PORT))
         self.server_socket.listen(1)
-        self.intensity = 0
-        self.frequency = 0
+        self.intensity = 1
+
+        self.__diodes = [26,19,13,6,5,11]
+        self.__indicators = [9,10]
+        GPIO.setmode(GPIO.BCM)
 
         self.create_thread_for_reception()
         self.create_thread_for_displaying()
@@ -26,8 +31,7 @@ class DiodeManager:
 
     def parse_for_freq_and_intensity(self, data):
         results = [int(s) for s in data.split() if s.isdigit()]
-        self.frequency = results[0]
-        self.intensity = results[1]
+        self.intensity = results[0]
 
     def receive(self):
         print("Started listening")
@@ -35,20 +39,32 @@ class DiodeManager:
         while(SHOULD_THREAD_RUN):
             self.connection, address = self.server_socket.accept()
             data = self.connection.recv(BUFFER_SIZE).decode()
-            print("SERVER_LOG (received): ", data)
+            print("Received: ", data)
             if(data != "QUIT"):
                 self.parse_for_freq_and_intensity(data)
+                for diode in self.diode_list:
+                    diode.ChangeDutyCycle(self.intensity)
 
 
         self.connection.close()
         print("Destroyed reception thread!")
 
     def display(self):
-        while(SHOULD_THREAD_RUN):
-            print("VALUES: ", str(self.frequency), str(self.intensity), str(SHOULD_THREAD_RUN))
-            sleep(0.1)
-        print("Destroyed display thread!")
+            self.diode_list = []
+            for diode in self.__diodes:
+                GPIO.setup(diode, GPIO.OUT, initial = GPIO.HIGH)
+                self.diode_list.append(GPIO.PWM(diode, 50))
 
+            for pwm in self.diode_list:
+                pwm.start(self.intensity)
+
+            while(SHOULD_THREAD_RUN):
+                continue
+    
+            print("Destroyed display thread!")
+            for pwm in self.diode_list:
+                pwm.stop()
+            
     def create_thread_for_reception(self):
         print("Started thread for reception")
         _thread.start_new_thread(self.receive,())
@@ -62,7 +78,7 @@ def signal_handler(sig, frame):
         global SHOULD_THREAD_RUN
         SHOULD_THREAD_RUN = False
         client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        client.connect(('localhost',2222))
+        client.connect(("'localhost'",2222))
         client.send("QUIT".encode())
         client.close()
         sleep(2)
@@ -70,18 +86,9 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-manager = DiodeManager('localhost', 2222)
-
+manager = DiodeManager("", 2222)
 
 while True:
     continue
 
-# i = 0
-# while True:
-#     i = i + 1
-#     client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-#     client.connect(('localhost',2222))
-#     client.send(("UPDATE_CONF: " + str(i) + " " +str(i+1)).encode())
-#     client.close()
-#     sleep(1)
 

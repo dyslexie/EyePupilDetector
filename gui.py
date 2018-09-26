@@ -116,14 +116,15 @@ class UserInterface(QWidget):
         self.video_analyzer.show()
 
     def update_configuration(self):
-        
-        freq = int(self.freq_input.toPlainText())
         intensity = int(self.intensity_input.toPlainText())
-        print("Parameters: ", freq, intensity)
+        self.send_configuration(intensity)
+        
+    def send_configuration(self, intensity):
+        print("Parameters: ", intensity)
         try:
             client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            client.connect(('localhost',2222))
-            client.send(("UPDATE_CONF: " + str(freq) + " " +str(intensity)).encode())
+            client.connect(("192.168.0.18",2222))
+            client.send(("UPDATE_CONF: " + str(intensity)).encode())
             client.close()
             print("Sent update of configuration!")
         except Exception as e:
@@ -131,26 +132,31 @@ class UserInterface(QWidget):
             print("catched exception:")
             print(e)
         
-        
     def create_diode_controls(self, width, height):
         self.send_configuration_to_raspberry = QPushButton("Update \n Raspberry Configuration", self)
         self.send_configuration_to_raspberry.clicked.connect(self.update_configuration)
         self.send_configuration_to_raspberry.move(width, height)
 
-        self.freq_label = QLabel("Frequency [%]: ", self)
-        self.freq_label.move(width + 10, height + 45)
-
         self.intensity_label = QLabel("Intensity [%]: ", self)
         self.intensity_label.move(width + 10, height + 65)
 
-        self.freq_input = QTextEdit("0", self)
-        self.freq_input.resize(50,26)
-        self.freq_input.move(width + 110, height + 40)
+        self.min_intensity_button = QPushButton("MIN", self)
+        self.min_intensity_button.clicked.connect(self.send_minimum_configuration)
+        self.min_intensity_button.move(width + 90, height + 65)
+
+        self.max_intensity_button = QPushButton("MAX", self)
+        self.max_intensity_button.clicked.connect(self.send_maximum_configuration)
+        self.max_intensity_button.move(width + 150, height + 65)
 
         self.intensity_input = QTextEdit("0", self)
         self.intensity_input.resize(50,26)
-        self.intensity_input.move(width + 110, height + 66)
+        self.intensity_input.move(width + 220, height + 65)
 
+    def send_minimum_configuration(self):
+        self.send_configuration(0)
+
+    def send_maximum_configuration(self):
+        self.send_configuration(100)
 
     def change_camera(self):
         source = self.camera.change_camera()
