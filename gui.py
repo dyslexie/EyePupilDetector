@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit
+from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit, QFrame
 from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
@@ -19,7 +19,7 @@ class UserInterface(QWidget):
         self.initUI()
 
     def initUI(self):
-
+        self.is_raspberry_connected = False
         load_img_button = QPushButton('Take photo', self)
         load_img_button.clicked.connect(self.take_photo)
         load_img_button.resize(load_img_button.sizeHint())
@@ -40,13 +40,22 @@ class UserInterface(QWidget):
         stop_video_button.resize(stop_video_button.sizeHint())
         stop_video_button.move(10,100)
 
+        connect_raspberry_button = QPushButton("Connect Raspberry", self)
+        connect_raspberry_button.clicked.connect(self.connect_raspberry)
+        connect_raspberry_button.resize(connect_raspberry_button.sizeHint())
+        connect_raspberry_button.move(10,130)
+        self.raspberry_label = QLabel("IP: unknown                ", self)
+        self.raspberry_label.move(20,160)
+        self.raspberry_label.setFrameStyle(QFrame.Panel | QFrame.Raised);
+
         switch_camera_button = QPushButton("Switch camera \n (PC / Raspberry)", self)
         switch_camera_button.clicked.connect(self.change_camera)
         switch_camera_button.resize(switch_camera_button.sizeHint())
-        switch_camera_button.move(10,150)
+        switch_camera_button.move(10,177)
 
-        self.camera_label = QLabel("Camera : PC                       ", self)
-        self.camera_label.move(10, 200)
+        self.camera_label = QLabel("Camera : PC                ", self)
+        self.camera_label.move(20, 220)
+        self.camera_label.setFrameStyle(QFrame.Panel | QFrame.Raised);
 
         self.hough_desc = QLabel("Hough radius range: ", self)
         self.hough_desc.move(15,240)
@@ -84,14 +93,14 @@ class UserInterface(QWidget):
         self.video_analyzer_button.move(10, 390)
 
         self.photo_description1 = QLabel("Original:", self)
-        self.photo_description1.move(250,10)
+        self.photo_description1.move(260,10)
         self.photo_label = QLabel(self)
-        self.photo_label.move(160,30)
+        self.photo_label.move(170,30)
 
         self.photo_description2 = QLabel("Detected:", self)
-        self.photo_description2.move(520,10)
+        self.photo_description2.move(530,10)
         self.photo_label2 = QLabel(self)
-        self.photo_label2.move(420,30)
+        self.photo_label2.move(430,30)
 
         self.video_preview_description = QLabel("Video Preview:", self)
         self.video_preview_description.move(360,180)
@@ -120,17 +129,21 @@ class UserInterface(QWidget):
         self.send_configuration(intensity)
         
     def send_configuration(self, intensity):
-        print("Parameters: ", intensity)
-        try:
-            client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            client.connect(("192.168.0.18",2222))
-            client.send(("UPDATE_CONF: " + str(intensity)).encode())
-            client.close()
-            print("Sent update of configuration!")
-        except Exception as e:
-            print("Configuration not sent!")
-            print("catched exception:")
-            print(e)
+        if(self.is_raspberry_connected):
+            print("Parameters: ", intensity)
+            try:
+                client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                client.connect((self.raspberry_ip,2222))
+                client.send(("UPDATE_CONF: " + str(intensity)).encode())
+                client.close()
+                print("Sent update of configuration!")
+            except Exception as e:
+                print("Configuration not sent!")
+                print("catched exception:")
+                print(e)
+        else:
+            self.raise_no_raspberry_error()
+
         
     def create_diode_controls(self, width, height):
         self.send_configuration_to_raspberry = QPushButton("Update \n Raspberry Configuration", self)
@@ -159,12 +172,38 @@ class UserInterface(QWidget):
         self.send_configuration(100)
 
     def change_camera(self):
-        source = self.camera.change_camera()
-        self.camera_label.setText("Camera : " + source)
-        self.video_is_recording = True
-        sleep(1)
-        self.video_is_recording = False
-        self.camera.generate_preview_thread(self)
+        if(self.is_raspberry_connected):
+            source = self.camera.change_camera()
+            self.camera_label.setText("Camera : " + source)
+            self.video_is_recording = True
+            sleep(1)
+            self.video_is_recording = False
+            self.camera.generate_preview_thread(self)
+        else:
+            self.raise_no_raspberry_error()
+
+
+    def connect_raspberry(self):
+        ip_address = "localhost"
+        ip_address = self.getStringFromUser("RaspberryPi addres: ")
+        print(ip_address)
+        client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        client.settimeout(5)
+        try:
+            client.connect((ip_address,2222))
+            client.send(("UPDATE_CONF: " + str(0)).encode())
+            self.raspberry_label.setText("IP: " + ip_address)
+            self.raspberry_ip = ip_address
+        except Exception as e:
+            print(e)
+            self.is_raspberry_connected = False
+            self.raspberry_label.setText("IP: unknown")
+            self.raise_no_raspberry_error()
+            return False
+
+        client.close()
+        self.is_raspberry_connected = True
+        return True
 
     def change_fps_value(self, value):
         self.fps_slider_desc.setText("FPS: " + str(value))
@@ -213,6 +252,13 @@ class UserInterface(QWidget):
         print("Performed Hough transform with parameters: " + str(self.min_rad) + ", " + str(self.max_rad))
         cv2.imwrite("detected.jpg", new)
         self.update_second_photo("detected.jpg")
+
+    def raise_no_raspberry_error(self):
+        self.msg = QMessageBox(self)
+        self.msg.setIcon(QMessageBox.Critical)
+        self.msg.setText("Raspberry not found!")
+        self.msg.setWindowTitle("Error")
+        self.msg.show()
 
     def getStringFromUser(self, message):
         text, ok = QInputDialog.getText(self, 'Text Input Dialog', message)
