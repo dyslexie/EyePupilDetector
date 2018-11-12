@@ -15,7 +15,7 @@ BUFFER_SIZE = 1024
 class DiodeManager:
     def __init__(self, TCP_IP, TCP_PORT):
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.server_socket.bind((TCP_IP,TCP_PORT))
+        self.server_socket.bind(("",TCP_PORT))
         self.server_socket.listen(1)
         self.intensity = 1
 
@@ -40,7 +40,7 @@ class DiodeManager:
             self.connection, address = self.server_socket.accept()
             data = self.connection.recv(BUFFER_SIZE).decode()
             print("Received: ", data)
-            if(data != "QUIT"):
+            if((data != "QUIT")or(data != " ")):
                 self.parse_for_freq_and_intensity(data)
                 for diode in self.diode_list:
                     diode.ChangeDutyCycle(self.intensity)
@@ -77,10 +77,6 @@ def signal_handler(sig, frame):
         print('You pressed Ctrl+C! - switching to false')
         global SHOULD_THREAD_RUN
         SHOULD_THREAD_RUN = False
-        client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        client.connect(("'localhost'",2222))
-        client.send("QUIT".encode())
-        client.close()
         sleep(2)
         sys.exit(0)
 
