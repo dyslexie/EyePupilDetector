@@ -53,10 +53,10 @@ class DiodeManager:
             color = GREEN_GPIO
         else:
             color = BLUE_GPIO
-
-        GPIO.output(color, 0)
-        sleep(self.impulse_time)
-        GPIO.output(color, 1)
+        if(self.impulse_time > 0):
+            GPIO.output(color, 0)
+            sleep(self.impulse_time/1000)
+            GPIO.output(color, 1)
 
 
     def receive(self):

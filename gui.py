@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit, QFrame
+from PyQt5.QtWidgets import QWidget, QPushButton, QMessageBox, QInputDialog, QLabel, QSizePolicy, QSlider, QLineEdit, QFrame, QComboBox
 from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
@@ -20,6 +20,7 @@ class UserInterface(QWidget):
 
     def initUI(self):
         self.is_raspberry_connected = False
+        self.color = 1
         load_img_button = QPushButton('Take photo', self)
         load_img_button.clicked.connect(self.take_photo)
         load_img_button.resize(load_img_button.sizeHint())
@@ -125,16 +126,20 @@ class UserInterface(QWidget):
         self.video_analyzer.show()
 
     def update_configuration(self):
-        intensity = int(self.intensity_input.toPlainText())
-        self.send_configuration(intensity)
+        ir_intensity = int(self.ir_intensity_input.toPlainText())
+        fixation_intensity = int(self.fix_intensity_input.toPlainText())
+        time = int(self.impulse_time_input.toPlainText())
+        color = self.color
         
-    def send_configuration(self, intensity):
+        self.send_configuration(ir_intensity, fixation_intensity, time, color)
+        
+    def send_configuration(self, ir, fixation, time, color):
         if(self.is_raspberry_connected):
-            print("Parameters: ", intensity)
+            print("Parameters: ", ir, fixation, time, color)
             try:
                 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                 client.connect((self.raspberry_ip,2222))
-                client.send(("UPDATE_CONF: " + str(50)+ " " + str(10) + " " + str(1) + " " + str(2)).encode())
+                client.send(("UPDATE_CONF: " + str(fixation)+ " " + str(ir) + " " + str(time) + " " + str(color)).encode())
                 client.close()
                 print("Sent update of configuration!")
             except Exception as e:
@@ -150,26 +155,45 @@ class UserInterface(QWidget):
         self.send_configuration_to_raspberry.clicked.connect(self.update_configuration)
         self.send_configuration_to_raspberry.move(width, height)
 
-        self.intensity_label = QLabel("Intensity [%]: ", self)
+        self.intensity_label = QLabel("IR Intensity [%]: ", self)
         self.intensity_label.move(width + 10, height + 65)
 
-        self.min_intensity_button = QPushButton("MIN", self)
-        self.min_intensity_button.clicked.connect(self.send_minimum_configuration)
-        self.min_intensity_button.move(width + 90, height + 65)
+        self.ir_intensity_input = QTextEdit("0", self)
+        self.ir_intensity_input.resize(35,26)
+        self.ir_intensity_input.move(width + 110, height + 65)
 
-        self.max_intensity_button = QPushButton("MAX", self)
-        self.max_intensity_button.clicked.connect(self.send_maximum_configuration)
-        self.max_intensity_button.move(width + 150, height + 65)
+        self.fix_intensity_label = QLabel("Fixation Intensity [%]: ", self)
+        self.fix_intensity_label.move(width + 170, height + 65)
 
-        self.intensity_input = QTextEdit("0", self)
-        self.intensity_input.resize(50,26)
-        self.intensity_input.move(width + 220, height + 65)
+        self.fix_intensity_input = QTextEdit("0", self)
+        self.fix_intensity_input.resize(35,26)
+        self.fix_intensity_input.move(width + 310, height + 65)
 
-    def send_minimum_configuration(self):
-        self.send_configuration(0)
+        self.impulse_time_label = QLabel("Impulse time [ms]:", self)
+        self.impulse_time_label.move(width + 350, height + 65)
 
-    def send_maximum_configuration(self):
-        self.send_configuration(100)
+        self.impulse_time_input = QTextEdit("0", self)
+        self.impulse_time_input.resize(50,26)
+        self.impulse_time_input.move(width + 465, height + 65)
+
+        self.color_label = QLabel("Color: ", self)
+        self.color_label.move(width + 520, height + 65)
+
+        comboBox = QComboBox(self)
+        comboBox.addItem("RED")
+        comboBox.addItem("GREEN")
+        comboBox.addItem("BLUE")
+        comboBox.move(width + 555, height + 65)
+
+        comboBox.activated[str].connect(self.color_choice)
+
+    def color_choice(self, text):
+        if (text == "RED"):
+            self.color = 1
+        if (text == "GREEN"):
+            self.color = 2
+        if (text == "BLUE"):
+            self.color = 3
 
     def change_camera(self):
         if(self.is_raspberry_connected):
