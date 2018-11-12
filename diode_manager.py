@@ -12,15 +12,19 @@ import sys
 SHOULD_THREAD_RUN = True
 BUFFER_SIZE = 1024
 
+RED_GPIO = 6
+GREEN_GPIO = 5
+BLUE_GPIO = 11
+
 class DiodeManager:
     def __init__(self, TCP_IP, TCP_PORT):
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.server_socket.bind(("",TCP_PORT))
         self.server_socket.listen(1)
-        self.intensity = 1
 
-        self.__diodes = [26,19,13,6,5,11]
-        self.__indicators = [9,10]
+        self.ir_diodes = [26, 19, 13]
+        self.fixation_diode = [9]
+        self.rgb_diode = [RED_GPIO, GREEN_GPIO, BLUE_GPIO]
         GPIO.setmode(GPIO.BCM)
 
         self.create_thread_for_reception()
@@ -29,9 +33,31 @@ class DiodeManager:
     def close(self):
         self.server_socket.close()
 
-    def parse_for_freq_and_intensity(self, data):
+    def parse_for_configuration_update(self, data):
         results = [int(s) for s in data.split() if s.isdigit()]
-        self.intensity = results[0]
+        self.fixation_intensity = results[0]
+        self.ir_intensity = results[1]
+        self.impulse_time = results[2]
+        self.impulse_color = results[3]
+
+    def update_configuration(self):
+        #ir diodes configuration
+        for pwm in self.ir_diodes_pwm:
+            pwm.ChangeDutyCycle(self.ir_intensity)
+        self.fixation_pwm.ChangeDutyCycle(self.fixation_intensity)
+        
+        #rgb diode configuration
+        if self.impulse_color == 1:
+            color = RED_GPIO
+        elif self.impulse_color == 2:
+            color = GREEN_GPIO
+        else:
+            color = BLUE_GPIO
+
+        GPIO.output(color, 0)
+        sleep(self.impulse_time)
+        GPIO.output(color, 1)
+
 
     def receive(self):
         print("Started listening")
@@ -41,29 +67,42 @@ class DiodeManager:
             data = self.connection.recv(BUFFER_SIZE).decode()
             print("Received: ", data)
             if((data != "QUIT")or(data != " ")):
-                self.parse_for_freq_and_intensity(data)
-                for diode in self.diode_list:
-                    diode.ChangeDutyCycle(self.intensity)
-
+                self.parse_for_configuration_update(data)
+                self.update_configuration()
 
         self.connection.close()
         print("Destroyed reception thread!")
 
     def display(self):
-            self.diode_list = []
-            for diode in self.__diodes:
+            #ir diodes configuration
+            self.ir_diodes_pwm = []
+            for diode in self.ir_diodes:
                 GPIO.setup(diode, GPIO.OUT, initial = GPIO.HIGH)
-                self.diode_list.append(GPIO.PWM(diode, 50))
+                self.ir_diodes_pwm.append(GPIO.PWM(diode, 50))
+            for pwm in self.ir_diodes_pwm:
+                pwm.start(20)
 
-            for pwm in self.diode_list:
-                pwm.start(self.intensity)
+            # fixation diode conifguration
+            GPIO.setup(self.fixation_diode[0], GPIO.OUT, initial = GPIO.HIGH)
+            self.fixation_pwm = GPIO.PWM(self.fixation_diode[0],50)
+            self.fixation_pwm.start(100)
+
+            #rgb diode configuration
+            for rgb_wire in self.rgb_diode:
+                GPIO.setup(rgb_wire, GPIO.OUT, initial = GPIO.HIGH)
 
             while(SHOULD_THREAD_RUN):
                 continue
     
             print("Destroyed display thread!")
-            for pwm in self.diode_list:
+            for pwm in self.ir_diodes_pwm:
                 pwm.stop()
+            self.fixation_pwm.stop()
+            for rgb_wire in self.rgb_diode:
+                GPIO.setup(rgb_wire, GPIO.OUT, initial = GPIO.HIGH)
+
+            GPIO.cleanup()
+
             
     def create_thread_for_reception(self):
         print("Started thread for reception")

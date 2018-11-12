@@ -134,7 +134,7 @@ class UserInterface(QWidget):
             try:
                 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                 client.connect((self.raspberry_ip,2222))
-                client.send(("UPDATE_CONF: " + str(intensity)).encode())
+                client.send(("UPDATE_CONF: " + str(50)+ " " + str(10) + " " + str(1) + " " + str(2)).encode())
                 client.close()
                 print("Sent update of configuration!")
             except Exception as e:
@@ -191,7 +191,7 @@ class UserInterface(QWidget):
         client.settimeout(5)
         try:
             client.connect((ip_address,2222))
-            client.send(("UPDATE_CONF: " + str(0)).encode())
+            client.send(("UPDATE_CONF: " + str(50)+ " " + str(10) + " " + str(1) + " " + str(1)).encode())
             self.raspberry_label.setText("IP: " + ip_address)
             self.raspberry_ip = ip_address
         except Exception as e:
