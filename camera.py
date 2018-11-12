@@ -14,12 +14,12 @@ class Camera:
         s,img = self.cam.read()
         imwrite(filename,img)
 
-    def change_camera(self):
+    def change_camera(self, raspberry_ip):
         if self.is_raspberry_connected:
             self.cam = VideoCapture(0)
             self.is_raspberry_connected = False
             return "PC"
-        self.cam = VideoCapture("http://192.168.43.80:8081/")
+        self.cam = VideoCapture("http://"+raspberry_ip+":8160")
         self.is_raspberry_connected = True
         return "Raspberry Pi"
 

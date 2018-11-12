@@ -197,7 +197,7 @@ class UserInterface(QWidget):
 
     def change_camera(self):
         if(self.is_raspberry_connected):
-            source = self.camera.change_camera()
+            source = self.camera.change_camera(self.raspberry_ip)
             self.camera_label.setText("Camera : " + source)
             self.video_is_recording = True
             sleep(1)
