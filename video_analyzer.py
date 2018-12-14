@@ -202,8 +202,8 @@ class VideoAnalyzer(QWidget):
 
     def convert(self):
         filename = self.filename
-        min_rad = self.get_string_from_user("Min rad: ", 0)
-        max_rad = self.get_string_from_user("Max rad: ", 0)
+        min_rad = int(self.get_string_from_user("Min rad: ", 0))
+        max_rad = int(self.get_string_from_user("Max rad: ", 0))
         self.is_stopped = False
 
         _thread.start_new_thread(self.video_convert_thread, (filename, min_rad, max_rad, ))
@@ -227,12 +227,13 @@ class VideoAnalyzer(QWidget):
         video_analyzer.set(CAP_PROP_POS_FRAMES, self.start_frame)
         difference = int(self.stop_frame - self.start_frame)
         list_of_circles = []
-        current_frame = self.stop_frame
+        current_frame = self.start_frame
 
         for x in range(difference):
             flag, frame = video_analyzer.read()
             circles = perform_hough_transforms_and_return_circles(frame, self.min_rad, self.max_rad)
-            list_of_circles.append((current_frame, circles))
+            if not(circles is None):
+                list_of_circles.append((current_frame, circles))
             current_frame = current_frame + 1
         
         self.save_list_to_file(filename, list_of_circles)
@@ -282,19 +283,23 @@ class VideoAnalyzer(QWidget):
     def get_string_from_user(self, message, default = ""):
         text, ok = QInputDialog.getText(self, 'Text Input Dialog', message)
         if ok:
-            return text
+            if text == '':
+                return 0
+            else:
+                return text
         return default
 
 
     def save_list_to_file(self, filename, list_of_circles):
         with open(filename, 'w') as csvfile:
             for circle in list_of_circles:
-                csvfile.write(str(circle[0]))
-                csvfile.write(",")
-                for x in range(3):
-                    csvfile.write(str(circle[1][0][0][x]))
+                if(circle[1][0][0][0] is not None):
+                    csvfile.write(str(circle[0]))
                     csvfile.write(",")
-                csvfile.write("\n")
+                    for x in range(3):
+                        csvfile.write(str(circle[1][0][0][x]))
+                        csvfile.write(",")
+                    csvfile.write("\n")
 
 # HELPERS - END
 #___________________________________________

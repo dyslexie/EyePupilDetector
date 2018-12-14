@@ -159,31 +159,31 @@ class UserInterface(QWidget):
         self.intensity_label.move(width + 10, height + 65)
 
         self.ir_intensity_input = QTextEdit("0", self)
-        self.ir_intensity_input.resize(35,26)
-        self.ir_intensity_input.move(width + 110, height + 65)
+        self.ir_intensity_input.resize(75,26)
+        self.ir_intensity_input.move(width + 115, height + 65)
 
         self.fix_intensity_label = QLabel("Fixation Intensity [%]: ", self)
-        self.fix_intensity_label.move(width + 170, height + 65)
+        self.fix_intensity_label.move(width + 200, height + 65)
 
         self.fix_intensity_input = QTextEdit("0", self)
-        self.fix_intensity_input.resize(35,26)
-        self.fix_intensity_input.move(width + 310, height + 65)
+        self.fix_intensity_input.resize(75,26)
+        self.fix_intensity_input.move(width + 340, height + 65)
 
         self.impulse_time_label = QLabel("Impulse time [ms]:", self)
-        self.impulse_time_label.move(width + 350, height + 65)
+        self.impulse_time_label.move(width + 420, height + 65)
 
         self.impulse_time_input = QTextEdit("0", self)
-        self.impulse_time_input.resize(50,26)
-        self.impulse_time_input.move(width + 465, height + 65)
+        self.impulse_time_input.resize(75,26)
+        self.impulse_time_input.move(width + 500, height + 65)
 
         self.color_label = QLabel("Color: ", self)
-        self.color_label.move(width + 520, height + 65)
+        self.color_label.move(width + 590, height + 65)
 
         comboBox = QComboBox(self)
         comboBox.addItem("RED")
         comboBox.addItem("GREEN")
         comboBox.addItem("BLUE")
-        comboBox.move(width + 555, height + 65)
+        comboBox.move(width + 635, height + 65)
 
         comboBox.activated[str].connect(self.color_choice)
 

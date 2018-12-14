@@ -3,7 +3,7 @@ from cv2 import *
 import _thread
 import PyQt5.QtGui
 from PyQt5.QtGui import QPixmap, QImage
-
+from time import sleep
 
 class Camera:
     def __init__(self):
@@ -11,6 +11,7 @@ class Camera:
         self.is_raspberry_connected = False
 
     def take_photo(self, filename):
+        sleep(1)
         s,img = self.cam.read()
         imwrite(filename,img)
 
